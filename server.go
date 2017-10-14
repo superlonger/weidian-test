@@ -2,10 +2,18 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"net/http"
 	"os"
 )
+
+type MsgRecv struct {
+	Type    string      `json:"type"`
+	Message interface{} `json:"message"`
+}
 
 func main() {
 	// setup http log file
@@ -24,5 +32,16 @@ func main() {
 		Output: logHttpFile,
 	}))
 	e.Static("/", "public")
+	e.POST("/", recvMsg)
 	e.Logger.Fatal(e.Start(":8000"))
+}
+func recvMsg(c echo.Context) error {
+	var msgRecv MsgRecv
+	content := c.FormValue("content")
+	fmt.Println(content)
+	err := json.Unmarshal([]byte(content), &msgRecv)
+	if err != nil {
+		return err
+	}
+	return c.String(http.StatusOK, `{"status":"success"}`)
 }
